@@ -1,10 +1,18 @@
 package com.datmaster.internetradio.logic;
 
+import java.io.IOException;
+
 import com.datmaster.internetradio.R;
 
 import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnBufferingUpdateListener;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 import android.media.SoundPool;
 import android.media.SoundPool.OnLoadCompleteListener;
+import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
@@ -14,54 +22,57 @@ import com.datmaster.internetradio.holders.MainActivityViewHolder;
 public class MainLogic implements OnClickListener {
 	
 	private boolean isPlay;
-	private boolean loaded;
 	private static MainActivityViewHolder holder;
-	private AudioManager audioManager;
-	private SoundPool soundPool;
-	private int soundId;
-	private float maxVolume;
-	private float actVolume;
-	private float volume;
-	private int maxStreams = 10;
+	private MediaPlayer mediaPlayer;
+	private String link = "http://217.20.164.163:8002/";
 	
 	public MainLogic(MainActivityViewHolder holder) {
-		isPlay = false;
-		loaded = false;
+		isPlay = false;		
 		this.holder = holder;
-		this.holder.btPlayPause.setOnClickListener(this);
-		
-		audioManager = (AudioManager) this.holder.activity.getSystemService(this.holder.activity.AUDIO_SERVICE);
-		actVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-		maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		volume = actVolume / maxVolume;
-		
-		this.holder.activity.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		soundPool = new SoundPool(maxStreams, AudioManager.STREAM_MUSIC, 0);
-		soundPool.setOnLoadCompleteListener(new OnLoadCompleteListener() {
-			
-			@Override
-			public void onLoadComplete(SoundPool arg0, int arg1, int arg2) {
-				loaded = true;		
-				Toast.makeText(MainLogic.holder.activity, "loaded", Toast.LENGTH_LONG).show();
-			}
-		});
-		soundId = soundPool.load(this.holder.activity, R.raw.hans, 1);
-		Toast.makeText(MainLogic.holder.activity, "loading...", Toast.LENGTH_LONG).show();
+		this.holder.btPlayPause.setOnClickListener(this);			
 	}
 
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.buttonPlay:
-			if(!isPlay && loaded) {
+			if(!isPlay) {
 				holder.btPlayPause.setText(holder.activity.getResources().getString(R.string.action_pause));
 				isPlay = true;
-				soundPool.play(soundId, volume, volume, 1, 0, 1f);
+				try {
+					mediaPlayer = new MediaPlayer();
+					mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+					mediaPlayer.setDataSource(link);	
+					mediaPlayer.prepareAsync();
+
+					mediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+
+			            public void onPrepared(MediaPlayer mp) {
+			            	mediaPlayer.start();
+			            }
+			        });
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			else if(loaded){
+			else {
 				holder.btPlayPause.setText(holder.activity.getResources().getString(R.string.action_play));
 				isPlay = false;
-				soundPool.pause(soundId);
+				if (mediaPlayer != null) {
+			        mediaPlayer.reset();
+			        mediaPlayer.release();
+			        mediaPlayer = null;
+			    }
 			}
 			break;
 
@@ -69,6 +80,5 @@ public class MainLogic implements OnClickListener {
 			break;
 		}
 		
-	}
-
+	}	
 }

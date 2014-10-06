@@ -1,5 +1,7 @@
 package com.datmaster.internetradio.fragments;
 
+import java.net.MalformedURLException;
+
 import com.datmaster.internetradio.R;
 import com.datmaster.internetradio.holders.MainActivityViewHolder;
 import com.datmaster.internetradio.logic.MainLogic;
@@ -10,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivityFragment extends Fragment {			
 	
@@ -25,8 +28,14 @@ public class MainActivityFragment extends Fragment {
 				false);
 		
 		holder.btPlayPause = (Button) rootView.findViewById(R.id.buttonPlay);
+		holder.tvTitle = (TextView) rootView.findViewById(R.id.tvTitle);
 		holder.activity = getActivity();
-		new MainLogic(holder);
+		try {
+			new MainLogic(holder);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return rootView;
 	}
 
